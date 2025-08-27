@@ -1,10 +1,12 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/db"); 
 const User = require("./user"); 
+const PasswordReset = require("./PasswordReset"); 
 
 
 const models = {
   User: User(sequelize, DataTypes), 
+  PasswordReset: PasswordReset(sequelize, DataTypes), 
 };
 
 

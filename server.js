@@ -1,6 +1,7 @@
 const express = require("express");
 const { sequelize } = require("./config/db"); 
 const authRoutes = require("./routes/auth");
+const passwordRoutes = require("./routes/passwordRoutes");
 const { connectDB } = require("./config/db"); 
 
 const app = express();
@@ -9,6 +10,7 @@ app.use(express.json());
 
 
 app.use("/api/auth", authRoutes);
+app.use("/api/password", passwordRoutes); 
 
 sequelize
   .sync({ force: false }) 
