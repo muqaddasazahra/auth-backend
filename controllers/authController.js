@@ -7,7 +7,7 @@ const jwt = require("jsonwebtoken");
 exports.signup = async (req, res) => {
   const { username, email, password } = req.body;
   try {
-    const user = await User.create({ username, email, password });
+    const user = await User.create({ username, email, password, provider: "Standard" });
     const otp = generateOTP();
     user.otp = otp;
     user.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000),

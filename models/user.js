@@ -15,7 +15,7 @@ module.exports = (sequelize) => {
     },
     password: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     },
     otp: {
       type: DataTypes.STRING,
@@ -29,11 +29,19 @@ module.exports = (sequelize) => {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    provider: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   });
 
   User.beforeCreate(async (user) => {
-    user.password = await bcrypt.hash(user.password, 10);
+    if (user.password) {
+      const saltRounds = 10;
+      user.password = await bcrypt.hash(user.password, saltRounds);
+    }
   });
+
 
   User.prototype.validatePassword = async function (password) {
     return await bcrypt.compare(password, this.password);

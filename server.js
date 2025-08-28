@@ -4,6 +4,7 @@ const { syncModels } = require("./models")
 const authRoutes = require("./routes/auth");
 const passwordRoutes = require("./routes/passwordRoutes");
 
+
 const app = express();
 
 app.use(express.json());

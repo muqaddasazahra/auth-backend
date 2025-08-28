@@ -1,6 +1,6 @@
 const { models } = require("../models");
 const { User, PasswordReset } = models;
-const { sendOTP } = require("../services/otpService");
+const { sendOTP, generateOTP } = require("../services/otpService");
 const bcrypt = require("bcryptjs");
 
 exports.forgotPassword = async (req, res) => {
@@ -67,3 +67,41 @@ exports.resetPassword = async (req, res) => {
       .json({ message: "Error resetting password", error: err.message });
   }
 };
+
+exports.resendPasswordResetOTP = async (req, res) => {
+  const { email } = req.body;
+  try {
+   
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const userId = user.id;
+    await PasswordReset.update(
+      { isUsed: true }, 
+      { where: { userId, isUsed: false } } 
+    );
+
+
+    const otp = generateOTP();
+    const passwordResetEntry = await PasswordReset.create({
+      email,
+      userId,
+      otp,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000), 
+      isUsed: false, 
+    });
+
+    await sendOTP(email, otp, "passwordReset");
+
+    res.status(201).json({
+      message: "OTP sent successfully. Check your email for OTP.",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error sending OTP", error: error.message });
+  }
+};
+
