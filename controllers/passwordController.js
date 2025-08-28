@@ -1,5 +1,6 @@
 const { models } = require("../models");
 const { User, PasswordReset } = models;
+const { sendOTP } = require("../services/otpService");
 const bcrypt = require("bcryptjs");
 
 exports.forgotPassword = async (req, res) => {
@@ -17,7 +18,7 @@ exports.forgotPassword = async (req, res) => {
       userId: user.id,
     });
     console.log(`Password reset OTP for ${email}: ${otp}`);
-
+    await sendOTP(email, otp);
     res.status(200).json({ message: "OTP sent to your email" });
   } catch (err) {
     res.status(500).json({ message: "Error sending OTP", error: err.message });
