@@ -10,6 +10,7 @@ exports.signup = async (req, res) => {
     const user = await User.create({ username, email, password });
     const otp = generateOTP();
     user.otp = otp;
+    user.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000),
     await user.save();
     await sendOTP(email, otp, "accountVerification");
 
@@ -32,10 +33,13 @@ exports.verifyOTP = async (req, res) => {
     if (user.isVerified) {
       return res.status(400).json({ message: "Account already verified" });
     }
+    
+    if (user.otpExpiresAt < new Date()) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
 
     if (verifyOTP(otp, user.otp)) {
       user.isVerified = true;
-      user.otp = null;
       await user.save();
 
       res.status(200).json({ message: "Account verified successfully, you can now login." });
@@ -46,6 +50,29 @@ exports.verifyOTP = async (req, res) => {
     res
       .status(500)
       .json({ message: "Error verifying OTP", error: error.message });
+  }
+};
+
+exports.resendOTP = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const otp = generateOTP();
+    user.otp = otp;
+    user.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    await user.save();
+    await sendOTP(email, otp, "accountVerification");
+
+    res.status(201).json({
+      message: "OTP sent successfully. Check your email for OTP.",
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error sending OTP", error: error.message });
   }
 };
 
