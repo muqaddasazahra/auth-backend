@@ -11,7 +11,7 @@ exports.signup = async (req, res) => {
     const otp = generateOTP();
     user.otp = otp;
     await user.save();
-    await sendOTP(email, otp);
+    await sendOTP(email, otp, "accountVerification");
 
     res.status(201).json({
       message: "User registered successfully. Check your email for OTP.",
