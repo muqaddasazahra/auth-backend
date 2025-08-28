@@ -77,25 +77,4 @@ exports.login = async (req, res) => {
 };
 
 
-// Forgot Password Request (send OTP)
-exports.forgotPassword = async (req, res) => {
-  const { email } = req.body;
-
-  try {
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.otp = otp;
-    await user.save();
-
-    console.log(`OTP for ${email}: ${otp}`);
-
-    res.status(200).json({ message: "OTP sent to your email." });
-  } catch (error) {
-    res.status(500).json({ message: "Error sending OTP", error: error.message });
-  }
-};
 

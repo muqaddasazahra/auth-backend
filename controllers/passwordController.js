@@ -1,7 +1,6 @@
-const User = require("../models/user");
-const PasswordReset = require("../models/PasswordReset");
+const { models } = require("../models");
+const { User, PasswordReset } = models;
 const bcrypt = require("bcryptjs");
-
 
 exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
@@ -14,7 +13,7 @@ exports.forgotPassword = async (req, res) => {
     await PasswordReset.create({
       email,
       otp,
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000), 
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
       userId: user.id,
     });
     console.log(`Password reset OTP for ${email}: ${otp}`);
@@ -22,25 +21,6 @@ exports.forgotPassword = async (req, res) => {
     res.status(200).json({ message: "OTP sent to your email" });
   } catch (err) {
     res.status(500).json({ message: "Error sending OTP", error: err.message });
-  }
-};
-
-exports.verifyResetOTP = async (req, res) => {
-  const { email, otp } = req.body;
-  try {
-    const resetRecord = await PasswordReset.findOne({
-      where: { email, otp, isUsed: false },
-    });
-
-    if (!resetRecord || resetRecord.expiresAt < new Date()) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
-    }
-
-    res.status(200).json({ message: "OTP verified successfully" });
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Error verifying OTP", error: err.message });
   }
 };
 
@@ -62,6 +42,15 @@ exports.resetPassword = async (req, res) => {
 
     const user = await User.findOne({ where: { email } });
     if (!user) return res.status(404).json({ message: "User not found" });
+
+     const isPasswordMatch = await bcrypt.compare(newPassword, user.password);
+     if (isPasswordMatch) {
+       return res
+         .status(400)
+         .json({
+           message: "New password cannot be the same as the current password",
+         });
+     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;

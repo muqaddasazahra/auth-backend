@@ -1,6 +1,5 @@
 const { DataTypes } = require("sequelize");
 const bcrypt = require("bcryptjs");
-const { sequelize } = require("../config/db");
 
 module.exports = (sequelize) => {
   const User = sequelize.define("User", {
@@ -35,6 +34,11 @@ module.exports = (sequelize) => {
   User.prototype.validatePassword = async function (password) {
     return await bcrypt.compare(password, this.password);
   };
-
+   User.associate = (models) => {
+     User.hasMany(models.PasswordReset, {
+       foreignKey: "userId",
+       onDelete: "CASCADE",
+     });
+   };
   return User;
 };

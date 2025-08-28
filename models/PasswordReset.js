@@ -1,26 +1,35 @@
+// models/PasswordReset.js
 const { DataTypes } = require("sequelize");
-const sequelize = require("../config/db");
-const User = require("./user");
 
-const PasswordReset = sequelize.define("PasswordReset", {
-  email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  otp: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  expiresAt: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-  isUsed: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: false,
-  },
-});
+module.exports = (sequelize) => {
+  const PasswordReset = sequelize.define("PasswordReset", {
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    otp: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    expiresAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    isUsed: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+  });
 
-PasswordReset.belongsTo(User, { foreignKey: "userId" });
+  PasswordReset.associate = (models) => {
+    PasswordReset.belongsTo(models.User, {
+      foreignKey: "userId",
+    });
+  };
 
-module.exports = PasswordReset;
+  return PasswordReset;
+};
