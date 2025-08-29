@@ -4,23 +4,88 @@ const { generateOTP, sendOTP, verifyOTP } = require("../services/otpService");
 const jwt = require("jsonwebtoken");
 
 
+//---------Standard Sign Up method--------------------
+
+// exports.signup = async (req, res) => {
+//   const { username, email, password } = req.body;
+//   try {
+//     const user = await User.create({ username, email, password, provider: "Standard" });
+//     const otp = generateOTP();
+//     user.otp = otp;
+//     user.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000),
+//     await user.save();
+//     await sendOTP(email, otp, "accountVerification");
+
+//     res.status(201).json({
+//       message: "User registered successfully. Check your email for OTP.",
+//     });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error during signup", error: error.message });
+//   }
+// };
+
+
 exports.signup = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, sosCode, socialMedia } = req.body;
+
   try {
-    const user = await User.create({ username, email, password, provider: "Standard" });
-    const otp = generateOTP();
-    user.otp = otp;
-    user.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000),
-    await user.save();
-    await sendOTP(email, otp, "accountVerification");
+    let user;
+    let provider;
+
+    if (sosCode) {
+      provider = "SOS";
+      user = await User.create({
+        provider: "SOS",
+        sosCode: sosCode,
+      });
+    }
+    else if (socialMedia) {
+      provider = "SocialMedia";
+      user = await User.create({
+        provider: "SocialMedia",
+        socialId: socialMedia,
+      });
+    }
+    else if (username && email && password) {
+      provider = "Standard";
+      user = await User.create({
+        username,
+        email,
+        password,
+        provider: "Standard",
+      });
+      const otp = generateOTP();
+      user.otp = otp;
+      user.otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+      await user.save();
+      await sendOTP(email, otp, "accountVerification");
+    }
+    else {
+      return res.status(400).json({
+        message:
+          "Invalid signup request. Please provide either sosCode, socialMedia, or username/email/password.",
+      });
+    }
 
     res.status(201).json({
-      message: "User registered successfully. Check your email for OTP.",
+      message: "User registered successfully.",
+      provider,
     });
   } catch (error) {
-    res.status(500).json({ message: "Error during signup", error: error.message });
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        message: "Validation error",
+        error: error.message,
+      });
+    }
+
+    res.status(500).json({
+      message: "Error during signup",
+      error: error.message,
+    });
   }
 };
+
 
 exports.verifyOTP = async (req, res) => {
   const { email, otp } = req.body;

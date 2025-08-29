@@ -2,38 +2,58 @@ const { DataTypes } = require("sequelize");
 const bcrypt = require("bcryptjs");
 
 module.exports = (sequelize) => {
-  const User = sequelize.define("User", {
-    username: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
+const User = sequelize.define("User", {
+  username: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true,
+    validate: {
+      len: [3, 50], 
     },
-    email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
+  },
+  email: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    unique: true,
+    validate: {
+      isEmail: true, 
     },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: true,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: [6, 100], 
     },
-    otp: {
-      type: DataTypes.STRING,
-      allowNull: true,
+  },
+  otp: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  otpExpiresAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  isVerified: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
+  provider: {
+    type: DataTypes.ENUM("Standard", "SOS", "SocialMedia"),
+    allowNull: false,
+    validate: {
+      notEmpty: true,
     },
-    otpExpiresAt: {
-      type: DataTypes.DATE,
-      allowNull: true,
-    },
-    isVerified: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
-    provider: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-  });
+  },
+  sosCode: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  socialId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+});
 
   User.beforeCreate(async (user) => {
     if (user.password) {
